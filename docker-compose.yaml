@@ -1,0 +1,69 @@
+name: vortex
+
+services:
+  db:
+    container_name: storage
+    image: postgres:16.3-alpine3.20
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./migrations:/docker-entrypoint-initdb.d
+      - data:/var/lib/postgresql/data
+    networks:
+      - vortex
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: |
+        CMD-SHELL
+        pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB} || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  watcher:
+    container_name: watcher
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      ALSY__SYNC__INTERVAL: 6s
+      ALSY__STORAGE__URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@storage:5432/${POSTGRES_DB}"
+      # ALSY__STORAGE__MIN_CONNS:
+      # ALSY__STORAGE__MAX_CONNS:
+      # ALSY__STORAGE__START_TIMEOUT:
+      # ALSY__STORAGE__READ_TIMEOUT:
+      # ALSY__STORAGE__WRITE_TIMEOUT:
+      # ALSY__STORAGE__IDLE_TIMEOUT:
+      # ALSY__STORAGE__LIFETIME_JITTER:
+      # ALSY__HTTP__READ_TIMEOUT:
+      # ALSY__HTTP__WRITE_TIMEOUT:
+      # ALSY__HTTP__IDLE_TIMEOUT:
+      # ALSY__HTTP__SHUTDOWN_TIMEOUT:
+    networks:
+      - vortex
+    ports:
+      - "8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: |
+        CMD
+        wget --no-verbose --tries=1 --spider http://localhost:8080/api/health || exit 1
+      interval: 1m30s
+      timeout: 30s
+      retries: 5
+      start_period: 300s
+
+volumes:
+  data:
+    name: vortex-data
+
+networks:
+  vortex:
+    name: vortex
+    driver: bridge
