@@ -14,7 +14,7 @@ func New(log *slog.Logger) http.Handler {
 
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		log.Info("")
-		httplib.ResponseJSON(w, api.Ok(""), http.StatusOK)
+		httplib.ResponseJSON(w, api.OK(""), http.StatusOK)
 	}
 
 	return http.HandlerFunc(handler)

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
-
 	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
 )
 

@@ -11,13 +11,12 @@ import (
 	"github.com/korikhin/vortex-assignment/internal/config"
 	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
 	"github.com/korikhin/vortex-assignment/internal/server/handlers"
-
-	storage "github.com/korikhin/vortex-assignment/internal/storage/postgres"
-	"github.com/korikhin/vortex-assignment/internal/watcher"
-	deployer "github.com/korikhin/vortex-assignment/pkg/deployer/mocks"
-
 	"github.com/korikhin/vortex-assignment/internal/server/middleware/logger"
 	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
+	storage "github.com/korikhin/vortex-assignment/internal/storage/postgres"
+	"github.com/korikhin/vortex-assignment/internal/watcher"
+
+	deployer "github.com/korikhin/vortex-assignment/pkg/deployer/mocks"
 )
 
 func main() {
@@ -29,7 +28,7 @@ func main() {
 	// Конфигурация хранилища
 	storage, err := storage.New(context.Background(), cfg.Storage)
 	if err != nil {
-		log.Error("failed to initialize storage", sl.Error(err))
+		log.Error("failed to initialize the storage", sl.Error(err))
 		os.Exit(1)
 	}
 
@@ -56,34 +55,39 @@ func main() {
 	}
 
 	// Запуск сервера
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
 	go func() {
 		if err := server.ListenAndServe(); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				log.Error("failed to start the server", sl.Error(err))
-				os.Exit(1)
+				cancel()
 			}
 		}
 	}()
 
 	// Ожидание сигнала прерывания работы сервиса
-	shutdownSignal := <-shutdown
-	log.Info("recieved shutdown signal", sl.Signal(shutdownSignal))
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case s := <-shutdown:
+		log.Info("recieved shutdown signal", sl.Signal(s))
+	case <-ctx.Done():
+	}
+
 	log.Info("stopping service...")
+
+	shCtx, shCancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
+	defer shCancel()
+
+	if err := server.Shutdown(shCtx); err != nil {
+		log.Error("error occurred while stopping the server", sl.Error(err))
+	}
 
 	watcher.Stop() // Ожидаем остановку
 	storage.Stop() // Ожидаем закрытия всех соединений
 
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.HTTP.ShutdownTimeout)
-	defer cancel()
-
-	if err := server.Shutdown(ctx); err != nil {
-		log.Error("error occured while stopping the server", sl.Error(err))
-		os.Exit(1)
-	}
-
 	log.Info("service stopped successfully")
-	os.Exit(0)
 }

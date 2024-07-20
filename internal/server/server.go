@@ -10,14 +10,14 @@ import (
 type Storage interface {
 	// AddClient создаёт нового клиента и первоначальный статус.
 	// Возвращает объект Client и возможную ошибку.
-	AddClient(ctx context.Context, p api.PayloadClient) (*models.Client, error)
+	AddClient(ctx context.Context, p api.Client) (*models.Client, error)
 
 	// UpdateClient обновляет данные клиента.
 	// Возвращает возможную ошибку и статус, если требуется перезагрузка.
 	UpdateClient(
 		ctx context.Context,
 		id int,
-		p api.PayloadClient,
+		p api.Client,
 		needRestart bool,
 	) (*models.Status, error)
 
@@ -27,5 +27,5 @@ type Storage interface {
 
 	// UpdateStatus обновляет статус.
 	// Возвразает предыдущий статус и возможную ошибку.
-	UpdateStatus(ctx context.Context, id int, p api.PayloadStatus) (*models.Status, error)
+	UpdateStatus(ctx context.Context, id int, p api.Status) (*models.Status, error)
 }

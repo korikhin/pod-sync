@@ -18,32 +18,6 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func sanitizeError(err error) error {
-	var netErr net.Error
-	if errors.As(err, &netErr) && netErr.Timeout() {
-		return storage.ErrConnectionTimeout
-	}
-
-	var opErr *net.OpError
-	if errors.As(err, &opErr) {
-		if opErr.Op == "dial" {
-			return storage.ErrConnectionDial
-		}
-	}
-
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		if codes.IsConnectionException(pgErr.Code) {
-			return storage.ErrConnectionInvalid
-		}
-		if codes.IsInvalidAuthorizationSpecification(pgErr.Code) {
-			return storage.ErrConnectionUnauthorized
-		}
-	}
-
-	return err
-}
-
 type Storage struct {
 	pool *pgxpool.Pool
 }
@@ -53,11 +27,11 @@ type Storage struct {
 // Возвращает объект Storage с инициализированным пулом соединений и возможную ошибку.
 //
 // Процесс работы функции:
-//  1. Парсит URL подключения из конфигурации
-//  2. Настраивает параметры пула соединений
-//  3. Создает пул соединений с заданной конфигурацией
-//  4. Выполняет пинг базы данных для проверки соединения
-//  5. Возвращает объект Storage с инициализированным пулом
+//   - Парсит URL подключения из конфигурации.
+//   - Настраивает параметры пула соединений.
+//   - Создает пул соединений с заданной конфигурацией.
+//   - Выполняет пинг базы данных для проверки соединения.
+//   - Возвращает объект Storage с инициализированным пулом.
 func New(ctx context.Context, cfg config.Storage) (*Storage, error) {
 	const op = "storage.postgres.New"
 
@@ -89,11 +63,37 @@ func (s *Storage) Stop() {
 	s.pool.Close()
 }
 
+func sanitizeError(err error) error {
+	var netErr net.Error
+	if errors.As(err, &netErr) && netErr.Timeout() {
+		return storage.ErrConnectionTimeout
+	}
+
+	var opErr *net.OpError
+	if errors.As(err, &opErr) {
+		if opErr.Op == "dial" {
+			return storage.ErrConnectionDial
+		}
+	}
+
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		if codes.IsConnectionException(pgErr.Code) {
+			return storage.ErrConnectionInvalid
+		}
+		if codes.IsInvalidAuthorizationSpecification(pgErr.Code) {
+			return storage.ErrConnectionUnauthorized
+		}
+	}
+
+	return err
+}
+
 var _ server.Storage = (*Storage)(nil)
 
 // AddClient создаёт нового клиента и первоначальный статус.
 // Возвращает объект Client и возможную ошибку.
-func (s *Storage) AddClient(ctx context.Context, p api.PayloadClient) (*models.Client, error) {
+func (s *Storage) AddClient(ctx context.Context, p api.Client) (*models.Client, error) {
 	const op = "storage.postgres.AddClient"
 
 	tx, err := s.pool.Begin(ctx)
@@ -184,7 +184,7 @@ func (s *Storage) AddClient(ctx context.Context, p api.PayloadClient) (*models.C
 func (s *Storage) UpdateClient(
 	ctx context.Context,
 	id int,
-	p api.PayloadClient,
+	p api.Client,
 	needRestart bool,
 ) (*models.Status, error) {
 	const op = "storage.postgres.UpdateClient"
@@ -345,7 +345,7 @@ func (s *Storage) DeleteClient(ctx context.Context, id int) (*models.Status, err
 
 // UpdateStatus обновляет статус.
 // Возвразает предыдущий статус и возможную ошибку.
-func (s *Storage) UpdateStatus(ctx context.Context, id int, p api.PayloadStatus) (*models.Status, error) {
+func (s *Storage) UpdateStatus(ctx context.Context, id int, p api.Status) (*models.Status, error) {
 	const op = "storage.postgres.UpdateStatus"
 
 	tx, err := s.pool.Begin(ctx)

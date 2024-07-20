@@ -7,16 +7,16 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/korikhin/vortex-assignment/internal/lib/api"
 	httplib "github.com/korikhin/vortex-assignment/internal/lib/http"
 	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
 	"github.com/korikhin/vortex-assignment/internal/models"
 	"github.com/korikhin/vortex-assignment/internal/server"
+	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
 	"github.com/korikhin/vortex-assignment/internal/storage"
 	"github.com/korikhin/vortex-assignment/internal/watcher"
 
-	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
+	"github.com/gorilla/mux"
 )
 
 // Delete удаляет клиента и соответствующий статус.
@@ -59,7 +59,7 @@ func Delete(log *slog.Logger, s server.Storage, wa *watcher.Watcher) http.Handle
 		ops := models.DeleteOperations(status)
 		wa.QueueOperations(ops)
 
-		httplib.ResponseJSON(w, api.Ok(""), http.StatusNoContent)
+		httplib.ResponseJSON(w, api.OK(""), http.StatusNoContent)
 	}
 
 	return http.HandlerFunc(handler)

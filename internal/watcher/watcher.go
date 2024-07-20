@@ -7,6 +7,7 @@ import (
 	"github.com/korikhin/vortex-assignment/internal/config"
 	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
 	"github.com/korikhin/vortex-assignment/internal/models"
+
 	"github.com/korikhin/vortex-assignment/pkg/deployer"
 )
 

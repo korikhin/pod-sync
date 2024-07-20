@@ -12,10 +12,9 @@ import (
 	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
 	"github.com/korikhin/vortex-assignment/internal/models"
 	"github.com/korikhin/vortex-assignment/internal/server"
+	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
 	"github.com/korikhin/vortex-assignment/internal/storage"
 	"github.com/korikhin/vortex-assignment/internal/watcher"
-
-	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
 
 	"github.com/gorilla/mux"
 )
@@ -42,7 +41,7 @@ func Update(log *slog.Logger, s server.Storage, wa *watcher.Watcher) http.Handle
 			return
 		}
 
-		p := api.PayloadClient{}
+		p := api.Client{}
 		if err := httplib.DecodeJSON(r.Body, &p); err != nil {
 			log.Error("failed to decode request body", sl.Error(err))
 			httplib.ResponseJSON(w, api.ErrInternal, http.StatusInternalServerError)
@@ -73,7 +72,7 @@ func Update(log *slog.Logger, s server.Storage, wa *watcher.Watcher) http.Handle
 		ops := models.RestartOperations(status)
 		wa.QueueOperations(ops)
 
-		httplib.ResponseJSON(w, api.Ok("client updated successfully"), http.StatusOK)
+		httplib.ResponseJSON(w, api.OK("client updated successfully"), http.StatusOK)
 	}
 
 	return http.HandlerFunc(handler)

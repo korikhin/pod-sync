@@ -9,9 +9,8 @@ import (
 	httplib "github.com/korikhin/vortex-assignment/internal/lib/http"
 	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
 	"github.com/korikhin/vortex-assignment/internal/server"
-	"github.com/korikhin/vortex-assignment/internal/watcher"
-
 	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
+	"github.com/korikhin/vortex-assignment/internal/watcher"
 )
 
 // Add создаёт нового клиента и первоначальный статус.
@@ -26,7 +25,7 @@ func Add(log *slog.Logger, s server.Storage, wa *watcher.Watcher) http.Handler {
 			sl.RequestID(request.GetID(r.Context())),
 		)
 
-		p := api.PayloadClient{}
+		p := api.Client{}
 		if err := httplib.DecodeJSON(r.Body, &p); err != nil {
 			log.Error("failed to decode request body", sl.Error(err))
 			httplib.ResponseJSON(w, api.ErrInternal, http.StatusInternalServerError)
@@ -46,7 +45,7 @@ func Add(log *slog.Logger, s server.Storage, wa *watcher.Watcher) http.Handler {
 			return
 		}
 
-		httplib.ResponseJSON(w, api.Ok("client created successfully"), http.StatusCreated)
+		httplib.ResponseJSON(w, api.OK("client created successfully"), http.StatusCreated)
 	}
 
 	return http.HandlerFunc(handler)

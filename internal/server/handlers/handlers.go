@@ -8,9 +8,8 @@ import (
 	"github.com/korikhin/vortex-assignment/internal/server/handlers/clients"
 	"github.com/korikhin/vortex-assignment/internal/server/handlers/health"
 	"github.com/korikhin/vortex-assignment/internal/server/handlers/status"
-	"github.com/korikhin/vortex-assignment/internal/watcher"
-
 	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
+	"github.com/korikhin/vortex-assignment/internal/watcher"
 
 	"github.com/gorilla/mux"
 )

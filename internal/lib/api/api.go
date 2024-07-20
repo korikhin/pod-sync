@@ -17,7 +17,7 @@ const (
 var (
 	ErrInternal       = Error("internal server error")
 	ErrBadRequest     = Error("bad request")
-	ErrClientNotFound = Error("client not found")
+	ErrClientNotFound = Error("no such client")
 	ErrStatusNotFound = Error("no such status")
 )
 
@@ -26,30 +26,21 @@ type Response struct {
 	Message string `json:"message,omitempty"`
 }
 
-func Ok(msg string) Response {
+func OK(m string) Response {
 	return Response{
 		Status:  statusOK,
-		Message: msg,
+		Message: m,
 	}
 }
 
-func Error(msg interface{}) Response {
-	var m string
-	switch x := msg.(type) {
-	case string:
-		m = x
-	case error:
-		m = x.Error()
-	}
+func Error(m string) Response {
 	return Response{
 		Status:  statusError,
 		Message: m,
 	}
 }
 
-type payload interface{}
-
-type PayloadClient struct {
+type Client struct {
 	Name     *string  `json:"name" validate:"required"`
 	Version  *int     `json:"version" validate:"required"`
 	Image    *string  `json:"image" validate:"required"`
@@ -58,10 +49,19 @@ type PayloadClient struct {
 	Priority *float64 `json:"priority" validate:"required"`
 }
 
-type PayloadStatus struct {
+type Status struct {
 	VWAP *bool `json:"VWAP" validate:"required"`
 	TWAP *bool `json:"TWAP" validate:"required"`
 	HFT  *bool `json:"HFT" validate:"required"`
+}
+
+func Validate(p interface{}) error {
+	if err := validator.New().Struct(p); err != nil {
+		errs := err.(validator.ValidationErrors)
+		return formatErrors(errs)
+	}
+
+	return nil
 }
 
 func formatErrors(errs validator.ValidationErrors) error {
@@ -78,13 +78,4 @@ func formatErrors(errs validator.ValidationErrors) error {
 	}
 
 	return errors.New(strings.Join(messages, ", "))
-}
-
-func Validate(p payload) error {
-	if err := validator.New().Struct(p); err != nil {
-		errs := err.(validator.ValidationErrors)
-		return formatErrors(errs)
-	}
-
-	return nil
 }
