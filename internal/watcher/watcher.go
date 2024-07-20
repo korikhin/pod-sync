@@ -28,7 +28,7 @@ type Watcher struct {
 	done chan struct{}
 }
 
-func NewWatcher(
+func New(
 	log *slog.Logger,
 	d deployer.Deployer,
 	cfg config.Sync,

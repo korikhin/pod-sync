@@ -35,7 +35,7 @@ func main() {
 	deployer := deployer.New()
 
 	// Сервис реализующий синхронизацию статусов
-	watcher := watcher.NewWatcher(log, deployer, cfg.Sync)
+	watcher := watcher.New(log, deployer, cfg.Sync)
 	watcher.Start()
 
 	// Конфигурация HTTP сервера
