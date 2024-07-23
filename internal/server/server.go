@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 
-	"github.com/korikhin/vortex-assignment/internal/lib/api"
-	"github.com/korikhin/vortex-assignment/internal/models"
+	"github.com/korikhin/pod-sync/internal/lib/api"
+	"github.com/korikhin/pod-sync/internal/models"
 )
 
 type Storage interface {
@@ -14,12 +14,7 @@ type Storage interface {
 
 	// UpdateClient обновляет данные клиента.
 	// Возвращает возможную ошибку и статус, если требуется перезагрузка.
-	UpdateClient(
-		ctx context.Context,
-		id int,
-		p api.Client,
-		needRestart bool,
-	) (*models.Status, error)
+	UpdateClient(ctx context.Context, id int, p api.Client) error
 
 	// DeleteClient удаляет клиента.
 	// Возвращает соответствующий статус и возможную ошибку.

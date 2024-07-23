@@ -4,11 +4,11 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/korikhin/vortex-assignment/internal/config"
-	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
-	"github.com/korikhin/vortex-assignment/internal/models"
+	"github.com/korikhin/pod-sync/internal/config"
+	"github.com/korikhin/pod-sync/internal/lib/logger/sl"
+	"github.com/korikhin/pod-sync/internal/models"
 
-	"github.com/korikhin/vortex-assignment/pkg/deployer"
+	"github.com/korikhin/pod-sync/pkg/deployer"
 )
 
 type watcherOptions struct {
@@ -28,11 +28,7 @@ type Watcher struct {
 	done chan struct{}
 }
 
-func New(
-	log *slog.Logger,
-	d deployer.Deployer,
-	cfg config.Sync,
-) *Watcher {
+func New(log *slog.Logger, d deployer.Deployer, cfg config.Sync) *Watcher {
 	log = log.With(sl.Component("sync/watcher"))
 
 	return &Watcher{
@@ -46,9 +42,7 @@ func New(
 }
 
 // QueueOperations заносит операции в очередь на выполнение.
-func (w *Watcher) QueueOperations(ops []*models.PodOperation) {
-	const op = "watcher.QueueOperation"
-
+func (w *Watcher) QueueOperations(ops []models.PodOperation) {
 	if len(ops) == 0 {
 		return
 	}
@@ -56,6 +50,9 @@ func (w *Watcher) QueueOperations(ops []*models.PodOperation) {
 	return
 }
 
+// Stop отправляет сигнал об остановке и ожидает ответного сигнала об остановке.
+//
+// TODO: Добавить context.Context остановки.
 func (w *Watcher) Stop() {
 	close(w.stopCh)
 	<-w.done
@@ -67,6 +64,8 @@ func (w *Watcher) Start() {
 
 // start запускает основной цикл Watcher'а по обработке операций из очереди.
 // Обрабатывает операции с подами по таймеру и завершается при вызове Stop.
+//
+// TODO: Предусмотреть механизм параллельного выполнения операций.
 func (w *Watcher) start() {
 	defer close(w.done)
 	ticker := time.NewTicker(w.opts.syncInterval)
@@ -81,14 +80,16 @@ func (w *Watcher) start() {
 					if err := w.d.CreatePod(po.PodID); err != nil {
 						w.log.Error("failed to perform operation", sl.PodOperation(po), sl.Error(err))
 					} else {
-						w.log.Info("pod created", sl.PodOperation(po))
+						w.log.Info("operation completed", sl.PodOperation(po))
 					}
 				case models.OpCodeDelete:
 					if err := w.d.DeletePod(po.PodID); err != nil {
 						w.log.Error("failed to perform operation", sl.PodOperation(po), sl.Error(err))
 					} else {
-						w.log.Info("pod deleted", sl.PodOperation(po))
+						w.log.Info("operation completed", sl.PodOperation(po))
 					}
+				default:
+					w.log.Warn("unknown operation", sl.PodOperation(po))
 				}
 			}
 		case <-w.stopCh:

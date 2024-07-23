@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/korikhin/vortex-assignment/internal/models"
+	"github.com/korikhin/pod-sync/internal/models"
 )
 
 func replaceAttr(groups []string, a slog.Attr) slog.Attr {
@@ -56,7 +56,7 @@ func Operation(op string) slog.Attr {
 	return slog.String("operation", op)
 }
 
-func PodOperation(po *models.PodOperation) slog.Attr {
+func PodOperation(po models.PodOperation) slog.Attr {
 	return slog.Any("pod_operation", po)
 }
 
@@ -68,6 +68,6 @@ func Signal(s os.Signal) slog.Attr {
 	return slog.String("signal", s.String())
 }
 
-func Status(s models.Status) slog.Attr {
+func Status(s *models.Status) slog.Attr {
 	return slog.Any("status", s)
 }

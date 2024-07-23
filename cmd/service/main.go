@@ -8,15 +8,15 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/korikhin/vortex-assignment/internal/config"
-	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
-	"github.com/korikhin/vortex-assignment/internal/server/handlers"
-	"github.com/korikhin/vortex-assignment/internal/server/middleware/logger"
-	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
-	storage "github.com/korikhin/vortex-assignment/internal/storage/postgres"
-	"github.com/korikhin/vortex-assignment/internal/watcher"
+	"github.com/korikhin/pod-sync/internal/config"
+	"github.com/korikhin/pod-sync/internal/lib/logger/sl"
+	"github.com/korikhin/pod-sync/internal/server/handlers"
+	"github.com/korikhin/pod-sync/internal/server/middleware/logger"
+	"github.com/korikhin/pod-sync/internal/server/middleware/request"
+	storage "github.com/korikhin/pod-sync/internal/storage/postgres"
+	"github.com/korikhin/pod-sync/internal/watcher"
 
-	deployer "github.com/korikhin/vortex-assignment/pkg/deployer/mocks"
+	deployer "github.com/korikhin/pod-sync/pkg/deployer/mocks"
 )
 
 func main() {

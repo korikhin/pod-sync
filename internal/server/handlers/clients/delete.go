@@ -7,14 +7,14 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/korikhin/vortex-assignment/internal/lib/api"
-	httplib "github.com/korikhin/vortex-assignment/internal/lib/http"
-	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
-	"github.com/korikhin/vortex-assignment/internal/models"
-	"github.com/korikhin/vortex-assignment/internal/server"
-	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
-	"github.com/korikhin/vortex-assignment/internal/storage"
-	"github.com/korikhin/vortex-assignment/internal/watcher"
+	"github.com/korikhin/pod-sync/internal/lib/api"
+	httplib "github.com/korikhin/pod-sync/internal/lib/http"
+	"github.com/korikhin/pod-sync/internal/lib/logger/sl"
+	"github.com/korikhin/pod-sync/internal/models"
+	"github.com/korikhin/pod-sync/internal/server"
+	"github.com/korikhin/pod-sync/internal/server/middleware/request"
+	"github.com/korikhin/pod-sync/internal/storage"
+	"github.com/korikhin/pod-sync/internal/watcher"
 
 	"github.com/gorilla/mux"
 )
@@ -46,14 +46,12 @@ func Delete(log *slog.Logger, s server.Storage, wa *watcher.Watcher) http.Handle
 				httplib.ResponseJSON(w, api.ErrClientNotFound, http.StatusNotFound)
 				return
 			}
-			if errors.Is(err, storage.ErrStatusNotFound) {
-				log.Warn("could not delete client", sl.Error(err))
-				httplib.ResponseJSON(w, api.ErrStatusNotFound, http.StatusNotFound)
-				return
-			}
 			log.Error("failed to delete client", sl.Error(err))
 			httplib.ResponseJSON(w, api.ErrInternal, http.StatusInternalServerError)
 			return
+		}
+		if status == nil {
+			log.Warn("client deleted, but status not found")
 		}
 
 		ops := models.DeleteOperations(status)

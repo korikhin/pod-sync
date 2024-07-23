@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
-	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
+	"github.com/korikhin/pod-sync/internal/lib/logger/sl"
+	"github.com/korikhin/pod-sync/internal/server/middleware/request"
 )
 
 func New(log *slog.Logger) func(next http.Handler) http.Handler {

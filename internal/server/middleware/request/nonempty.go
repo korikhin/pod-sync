@@ -4,9 +4,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/korikhin/vortex-assignment/internal/lib/api"
-	httplib "github.com/korikhin/vortex-assignment/internal/lib/http"
-	"github.com/korikhin/vortex-assignment/internal/lib/logger/sl"
+	"github.com/korikhin/pod-sync/internal/lib/api"
+	httplib "github.com/korikhin/pod-sync/internal/lib/http"
+	"github.com/korikhin/pod-sync/internal/lib/logger/sl"
 )
 
 func NonEmpty(log *slog.Logger) func(next http.Handler) http.Handler {

@@ -1,8 +1,8 @@
 package api
 
 import (
-	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 
 	"github.com/go-playground/validator/v10"
@@ -50,32 +50,48 @@ type Client struct {
 }
 
 type Status struct {
-	VWAP *bool `json:"VWAP" validate:"required"`
-	TWAP *bool `json:"TWAP" validate:"required"`
-	HFT  *bool `json:"HFT" validate:"required"`
+	X *bool `json:"X" validate:"required"`
+	Y *bool `json:"Y" validate:"required"`
+	Z *bool `json:"Z" validate:"required"`
 }
 
-func Validate(p interface{}) error {
-	if err := validator.New().Struct(p); err != nil {
-		errs := err.(validator.ValidationErrors)
-		return formatErrors(errs)
+func NewValidator(opts ...validator.Option) *validator.Validate {
+	v := validator.New(opts...)
+	v.RegisterTagNameFunc(func(fld reflect.StructField) string {
+		name := strings.SplitN(fld.Tag.Get("json"), ",", 2)[0]
+		if name == "-" {
+			return ""
+		}
+		return name
+	})
+	return v
+}
+
+func Validate(v *validator.Validate, p interface{}) error {
+	if err := v.Struct(p); err != nil {
+		if errs, ok := err.(validator.ValidationErrors); ok {
+			return formatErrors(errs)
+		}
+		return err
 	}
 
 	return nil
 }
 
 func formatErrors(errs validator.ValidationErrors) error {
-	var messages []string
-	for _, err := range errs {
-		var message string
-		switch f := err.Field(); err.ActualTag() {
-		case "required":
-			message = fmt.Sprintf("field %s is required", f)
-		default:
-			message = fmt.Sprintf("field %s is not valid", f)
-		}
-		messages = append(messages, message)
+	if len(errs) == 0 {
+		return nil
+	}
+	var msg string
+	switch e := errs[0]; e.Tag() {
+	case "required":
+		msg = fmt.Sprintf("field %s is required", e.Field())
+	default:
+		msg = fmt.Sprintf("field %s is not valid", e.Field())
 	}
 
-	return errors.New(strings.Join(messages, ", "))
+	if n := len(errs); n > 1 {
+		return fmt.Errorf("%s (and %d more)", msg, n-1)
+	}
+	return fmt.Errorf(msg)
 }

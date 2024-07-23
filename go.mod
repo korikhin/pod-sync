@@ -1,4 +1,4 @@
-module github.com/korikhin/vortex-assignment
+module github.com/korikhin/pod-sync
 
 go 1.22.5
 

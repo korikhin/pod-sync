@@ -13,7 +13,6 @@ type Client struct {
 	CPU       string
 	Memory    string
 	Priority  float64
-	SpawnedAt time.Time
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

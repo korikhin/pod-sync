@@ -1,4 +1,4 @@
-name: vortex
+name: pod-sync
 
 services:
   db:
@@ -13,7 +13,7 @@ services:
       - ./migrations:/docker-entrypoint-initdb.d
       - data:/var/lib/postgresql/data
     networks:
-      - vortex
+      - watcher
     ports:
       - "5433:5432"
     healthcheck:
@@ -30,21 +30,21 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     environment:
-      ALSY__SYNC__INTERVAL: 6s
-      ALSY__STORAGE__URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@storage:5432/${POSTGRES_DB}"
-      # ALSY__STORAGE__MIN_CONNS:
-      # ALSY__STORAGE__MAX_CONNS:
-      # ALSY__STORAGE__START_TIMEOUT:
-      # ALSY__STORAGE__READ_TIMEOUT:
-      # ALSY__STORAGE__WRITE_TIMEOUT:
-      # ALSY__STORAGE__IDLE_TIMEOUT:
-      # ALSY__STORAGE__LIFETIME_JITTER:
-      # ALSY__HTTP__READ_TIMEOUT:
-      # ALSY__HTTP__WRITE_TIMEOUT:
-      # ALSY__HTTP__IDLE_TIMEOUT:
-      # ALSY__HTTP__SHUTDOWN_TIMEOUT:
+      PSY__SYNC__INTERVAL: 6s
+      PSY__STORAGE__URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@storage:5432/${POSTGRES_DB}"
+      # PSY__STORAGE__MIN_CONNS:
+      # PSY__STORAGE__MAX_CONNS:
+      # PSY__STORAGE__START_TIMEOUT:
+      # PSY__STORAGE__READ_TIMEOUT:
+      # PSY__STORAGE__WRITE_TIMEOUT:
+      # PSY__STORAGE__IDLE_TIMEOUT:
+      # PSY__STORAGE__LIFETIME_JITTER:
+      # PSY__HTTP__READ_TIMEOUT:
+      # PSY__HTTP__WRITE_TIMEOUT:
+      # PSY__HTTP__IDLE_TIMEOUT:
+      # PSY__HTTP__SHUTDOWN_TIMEOUT:
     networks:
-      - vortex
+      - watcher
     ports:
       - "8081:8080"
     depends_on:
@@ -61,9 +61,9 @@ services:
 
 volumes:
   data:
-    name: vortex-data
+    name: watcher-data
 
 networks:
-  vortex:
-    name: vortex
+  watcher:
+    name: watcher
     driver: bridge

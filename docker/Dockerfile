@@ -23,7 +23,7 @@ WORKDIR /service
 COPY --from=build-stage /build/service ./service
 
 ENV UID=10001
-ENV USER=vortex
+ENV USER=watcher
 
 RUN adduser \
     --disabled-password \
@@ -36,9 +36,9 @@ RUN adduser \
 
 # Metadata
 LABEL org.opencontainers.image.description="Algorithm Synchronization Service"
-LABEL org.opencontainers.image.source="https://github.com/korikhin/vortex-assignment"
+LABEL org.opencontainers.image.source="https://github.com/korikhin/pod-sync"
 LABEL org.opencontainers.image.licenses="MIT"
 
 EXPOSE 8080
-USER vortex:vortex
+USER watcher:watcher
 ENTRYPOINT ["./service"]

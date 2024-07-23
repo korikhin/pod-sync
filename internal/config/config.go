@@ -62,7 +62,7 @@ func defaultConfig() *Config {
 }
 
 const (
-	envPrefix = "ALSY__" // ALgorithm SYnc
+	envPrefix = "PSY__" // Pod SYnc
 	delim     = "."
 	Tag       = "koanf"
 )

@@ -3,10 +3,10 @@ package models
 import "log/slog"
 
 type Status struct {
-	ID   int
-	VWAP bool
-	TWAP bool
-	HFT  bool
+	ID int
+	X  bool
+	Y  bool
+	Z  bool
 }
 
 func (s *Status) LogValue() slog.Value {

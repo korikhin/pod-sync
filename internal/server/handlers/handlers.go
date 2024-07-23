@@ -4,12 +4,12 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/korikhin/vortex-assignment/internal/server"
-	"github.com/korikhin/vortex-assignment/internal/server/handlers/clients"
-	"github.com/korikhin/vortex-assignment/internal/server/handlers/health"
-	"github.com/korikhin/vortex-assignment/internal/server/handlers/status"
-	"github.com/korikhin/vortex-assignment/internal/server/middleware/request"
-	"github.com/korikhin/vortex-assignment/internal/watcher"
+	"github.com/korikhin/pod-sync/internal/server"
+	"github.com/korikhin/pod-sync/internal/server/handlers/clients"
+	"github.com/korikhin/pod-sync/internal/server/handlers/health"
+	"github.com/korikhin/pod-sync/internal/server/handlers/status"
+	"github.com/korikhin/pod-sync/internal/server/middleware/request"
+	"github.com/korikhin/pod-sync/internal/watcher"
 
 	"github.com/gorilla/mux"
 )

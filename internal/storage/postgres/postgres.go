@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/korikhin/vortex-assignment/internal/config"
-	"github.com/korikhin/vortex-assignment/internal/lib/api"
-	"github.com/korikhin/vortex-assignment/internal/models"
-	"github.com/korikhin/vortex-assignment/internal/server"
-	"github.com/korikhin/vortex-assignment/internal/storage"
+	"github.com/korikhin/pod-sync/internal/config"
+	"github.com/korikhin/pod-sync/internal/lib/api"
+	"github.com/korikhin/pod-sync/internal/models"
+	"github.com/korikhin/pod-sync/internal/server"
+	"github.com/korikhin/pod-sync/internal/storage"
 
 	codes "github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
@@ -97,12 +97,13 @@ func (s *Storage) AddClient(ctx context.Context, p api.Client) (*models.Client, 
 	const op = "storage.postgres.AddClient"
 
 	tx, err := s.pool.Begin(ctx)
+	defer tx.Rollback(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	query := `
-		insert into vortex.clients (
+		insert into watcher.clients (
 			name,
 			version,
 			image,
@@ -125,7 +126,6 @@ func (s *Storage) AddClient(ctx context.Context, p api.Client) (*models.Client, 
 			cpu,
 			mem,
 			priority,
-			spawned_at,
 			created_at,
 			updated_at;
 	`
@@ -147,16 +147,14 @@ func (s *Storage) AddClient(ctx context.Context, p api.Client) (*models.Client, 
 		&client.CPU,
 		&client.Memory,
 		&client.Priority,
-		&client.SpawnedAt,
 		&client.CreatedAt,
 		&client.UpdatedAt,
 	); err != nil {
-		_ = tx.Rollback(ctx)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	queryStatus := `
-		insert into vortex.status (
+		insert into watcher.status (
 			client_id
 		) values (
 			@client_id
@@ -167,12 +165,10 @@ func (s *Storage) AddClient(ctx context.Context, p api.Client) (*models.Client, 
 	}
 
 	if _, err := tx.Exec(ctx, queryStatus, argsStatus); err != nil {
-		_ = tx.Rollback(ctx)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		_ = tx.Rollback(ctx)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -181,21 +177,11 @@ func (s *Storage) AddClient(ctx context.Context, p api.Client) (*models.Client, 
 
 // UpdateClient обновляет данные клиента.
 // Возвращает возможную ошибку и статус, если требуется перезагрузка.
-func (s *Storage) UpdateClient(
-	ctx context.Context,
-	id int,
-	p api.Client,
-	needRestart bool,
-) (*models.Status, error) {
+func (s *Storage) UpdateClient(ctx context.Context, id int, p api.Client) error {
 	const op = "storage.postgres.UpdateClient"
 
-	tx, err := s.pool.Begin(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
 	query := `
-		update vortex.clients
+		update watcher.clients
 		set (
 			name,
 			version,
@@ -225,58 +211,15 @@ func (s *Storage) UpdateClient(
 		"priority": p.Priority,
 	}
 
-	tag, err := tx.Exec(ctx, query, args)
+	tag, err := s.pool.Exec(ctx, query, args)
 	if err != nil {
-		_ = tx.Rollback(ctx)
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 	if tag.RowsAffected() == 0 {
-		_ = tx.Rollback(ctx)
-		return nil, fmt.Errorf("%s: %w", op, storage.ErrClientNotFound)
+		return fmt.Errorf("%s: %w", op, storage.ErrClientNotFound)
 	}
 
-	if !needRestart {
-		if err := tx.Commit(ctx); err != nil {
-			_ = tx.Rollback(ctx)
-			return nil, fmt.Errorf("%s: %w", op, err)
-		}
-		return nil, nil
-	}
-
-	queryStatus := `
-		select
-			id,
-			"VWAP",
-			"TWAP",
-			"HFT"
-		from vortex.status
-		where client_id = @client_id;
-	`
-	argsStatus := pgx.NamedArgs{
-		"client_id": id,
-	}
-
-	status := &models.Status{}
-	if err := tx.QueryRow(ctx, queryStatus, argsStatus).Scan(
-		&status.ID,
-		&status.VWAP,
-		&status.TWAP,
-		&status.HFT,
-	); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			_ = tx.Rollback(ctx)
-			return nil, fmt.Errorf("%s: %w", op, storage.ErrStatusNotFound)
-		}
-		_ = tx.Rollback(ctx)
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		_ = tx.Rollback(ctx)
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
-	return status, nil
+	return nil
 }
 
 // DeleteClient удаляет клиента.
@@ -285,6 +228,7 @@ func (s *Storage) DeleteClient(ctx context.Context, id int) (*models.Status, err
 	const op = "storage.postgres.DeleteClient"
 
 	tx, err := s.pool.Begin(ctx)
+	defer tx.Rollback(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -292,10 +236,10 @@ func (s *Storage) DeleteClient(ctx context.Context, id int) (*models.Status, err
 	queryStatus := `
 		select
 			id,
-			"VWAP",
-			"TWAP",
-			"HFT"
-		from vortex.status
+			"X",
+			"Y",
+			"Z"
+		from watcher.status
 		where client_id = @client_id;
 	`
 	argsStatus := pgx.NamedArgs{
@@ -303,40 +247,36 @@ func (s *Storage) DeleteClient(ctx context.Context, id int) (*models.Status, err
 	}
 
 	status := &models.Status{}
-	if err := tx.QueryRow(ctx, queryStatus, argsStatus).Scan(
+	errStatus := tx.QueryRow(ctx, queryStatus, argsStatus).Scan(
 		&status.ID,
-		&status.VWAP,
-		&status.TWAP,
-		&status.HFT,
-	); err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			_ = tx.Rollback(ctx)
-			return nil, fmt.Errorf("%s: %w", op, storage.ErrStatusNotFound)
-		}
-		_ = tx.Rollback(ctx)
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
+		&status.X,
+		&status.Y,
+		&status.Z,
+	)
 
 	query := `
-		delete from vortex.clients
+		delete from watcher.clients
 		where id = @id;
 	`
 	args := pgx.NamedArgs{
 		"id": id,
 	}
 
-	tag, err := tx.Exec(ctx, query, args)
-	if err != nil {
-		_ = tx.Rollback(ctx)
+	if tag, err := tx.Exec(ctx, query, args); err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-	if tag.RowsAffected() == 0 {
-		_ = tx.Rollback(ctx)
+	} else if tag.RowsAffected() == 0 {
 		return nil, fmt.Errorf("%s: %w", op, storage.ErrClientNotFound)
 	}
 
+	if errStatus != nil {
+		if errors.Is(errStatus, pgx.ErrNoRows) {
+			status = nil
+		} else {
+			return nil, fmt.Errorf("%s: %w", op, errStatus)
+		}
+	}
+
 	if err := tx.Commit(ctx); err != nil {
-		_ = tx.Rollback(ctx)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
@@ -349,16 +289,17 @@ func (s *Storage) UpdateStatus(ctx context.Context, id int, p api.Status) (*mode
 	const op = "storage.postgres.UpdateStatus"
 
 	tx, err := s.pool.Begin(ctx)
+	defer tx.Rollback(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	queryGet := `
 		select
-			"VWAP",
-			"TWAP",
-			"HFT"
-		from vortex.status
+			"X",
+			"Y",
+			"Z"
+		from watcher.status
 		where id = @id;
 	`
 	argsGet := pgx.NamedArgs{
@@ -367,50 +308,45 @@ func (s *Storage) UpdateStatus(ctx context.Context, id int, p api.Status) (*mode
 
 	statusBefore := &models.Status{ID: id}
 	if err := tx.QueryRow(ctx, queryGet, argsGet).Scan(
-		&statusBefore.VWAP,
-		&statusBefore.TWAP,
-		&statusBefore.HFT,
+		&statusBefore.X,
+		&statusBefore.Y,
+		&statusBefore.Z,
 	); err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			_ = tx.Rollback(ctx)
 			return nil, fmt.Errorf("%s: %w", op, storage.ErrStatusNotFound)
 		}
-		_ = tx.Rollback(ctx)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
 	queryUpdate := `
-		update vortex.status
+		update watcher.status
 		set (
-			"VWAP",
-			"TWAP",
-			"HFT"
+			"X",
+			"Y",
+			"Z"
 		) = (
-			@VWAP,
-			@TWAP,
-			@HFT
+			@X,
+			@Y,
+			@Z
 		)
 		where id = @id;
 	`
 	argsUpdate := pgx.NamedArgs{
-		"id":   id,
-		"VWAP": p.VWAP,
-		"TWAP": p.TWAP,
-		"HFT":  p.HFT,
+		"id": id,
+		"X":  p.X,
+		"Y":  p.Y,
+		"Z":  p.Z,
 	}
 
 	tag, err := tx.Exec(ctx, queryUpdate, argsUpdate)
 	if err != nil {
-		_ = tx.Rollback(ctx)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	if tag.RowsAffected() == 0 {
-		_ = tx.Rollback(ctx)
 		return nil, fmt.Errorf("%s: %w", op, storage.ErrStatusNotFound)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
-		_ = tx.Rollback(ctx)
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 

@@ -10,7 +10,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	httplib "github.com/korikhin/vortex-assignment/internal/lib/http"
+	httplib "github.com/korikhin/pod-sync/internal/lib/http"
 )
 
 type ContextKey struct {
@@ -25,7 +25,7 @@ var (
 	RequestKey = &ContextKey{"RequestID"}
 )
 
-// Позаимствовано отсюда:
+// Позаимствовано:
 // https://github.com/go-chi/chi/blob/master/middleware/request_id.go
 
 var prefix string
