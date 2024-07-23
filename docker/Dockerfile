@@ -15,8 +15,9 @@ RUN --mount=type=cache,target=/go-cache \
     CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -ldflags "-s -w -extldflags '-static'" -o ./service ./cmd/service
 
-RUN apk add --no-cache upx \
-    && upx --best --lzma ./service
+RUN --mount=type=cache,target=/var/cache/apk \
+    apk add upx \
+    && time upx --best --lzma ./service
 
 FROM alpine:3.20 AS release-stage
 WORKDIR /service
@@ -35,7 +36,7 @@ RUN adduser \
     "${USER}"
 
 # Metadata
-LABEL org.opencontainers.image.description="Algorithm Synchronization Service"
+LABEL org.opencontainers.image.description="Pod Synchronization Service"
 LABEL org.opencontainers.image.source="https://github.com/korikhin/pod-sync"
 LABEL org.opencontainers.image.licenses="MIT"
 
