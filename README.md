@@ -1,4 +1,4 @@
-# Сервис синхронизации алгоритмов
+# Сервис синхронизации подов
 
 Микросервис для синхронизации работы подов. См. [задание](ASSIGNMENT.md).<br>
 
@@ -187,7 +187,7 @@ PUT /api/v1/status/{id:[0-9]+}?need_restart=true
 {
   "time": "2024-07-19T00:15:22.138231926Z",
   "level": "INFO",
-  "msg": "pod created",
+  "msg": "operation completed",
   "component": "sync/watcher",
   "pod_operation": "<CREATE> X-168317"
 }
