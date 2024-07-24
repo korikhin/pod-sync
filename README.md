@@ -36,7 +36,11 @@ POSTGRES_PASSWORD=password
 Сервис запускается с помощью **docker-compose**:
 
 ```sh
-docker-compose up -d --build
+docker-compose up -d
+```
+
+```sh
+docker-compose down
 ```
 
 <br>
