@@ -30,7 +30,7 @@ services:
       context: .
       dockerfile: docker/Dockerfile
     environment:
-      PSY__SYNC__INTERVAL: 6s
+      PSY__SYNC__INTERVAL: 10s
       PSY__STORAGE__URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@storage:5432/${POSTGRES_DB}"
       # PSY__STORAGE__MIN_CONNS:
       # PSY__STORAGE__MAX_CONNS:
