@@ -60,6 +60,9 @@ func New(ctx context.Context, cfg config.Storage) (*Storage, error) {
 // Stop закрывает все соединения в пуле и отклоняет новые запросы.
 // Блокируется до закрытия всех соединений.
 func (s *Storage) Stop() {
+	if s == nil {
+		return
+	}
 	s.pool.Close()
 }
 

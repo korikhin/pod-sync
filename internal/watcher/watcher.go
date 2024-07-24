@@ -54,11 +54,17 @@ func (w *Watcher) QueueOperations(ops []models.PodOperation) {
 //
 // TODO: Добавить context.Context остановки.
 func (w *Watcher) Stop() {
+	if w == nil {
+		return
+	}
 	close(w.stopCh)
 	<-w.done
 }
 
 func (w *Watcher) Start() {
+	if w == nil {
+		return
+	}
 	go w.start()
 }
 
