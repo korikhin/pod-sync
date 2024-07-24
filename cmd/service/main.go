@@ -75,6 +75,7 @@ func main() {
 	case s := <-shutdown:
 		log.Info("recieved shutdown signal", sl.Signal(s))
 	case <-ctx.Done():
+		log.Info("received cancellation signal")
 	}
 
 	log.Info("stopping service...")
@@ -89,5 +90,5 @@ func main() {
 	watcher.Stop() // Ожидаем остановку
 	storage.Stop() // Ожидаем закрытия всех соединений
 
-	log.Info("service stopped successfully")
+	log.Info("service stopped")
 }

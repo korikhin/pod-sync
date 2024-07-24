@@ -97,10 +97,10 @@ func (s *Storage) AddClient(ctx context.Context, p api.Client) (*models.Client, 
 	const op = "storage.postgres.AddClient"
 
 	tx, err := s.pool.Begin(ctx)
-	defer tx.Rollback(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+	defer tx.Rollback(ctx)
 
 	query := `
 		insert into watcher.clients (
@@ -228,10 +228,10 @@ func (s *Storage) DeleteClient(ctx context.Context, id int) (*models.Status, err
 	const op = "storage.postgres.DeleteClient"
 
 	tx, err := s.pool.Begin(ctx)
-	defer tx.Rollback(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+	defer tx.Rollback(ctx)
 
 	queryStatus := `
 		select
@@ -289,10 +289,10 @@ func (s *Storage) UpdateStatus(ctx context.Context, id int, p api.Status) (*mode
 	const op = "storage.postgres.UpdateStatus"
 
 	tx, err := s.pool.Begin(ctx)
-	defer tx.Rollback(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+	defer tx.Rollback(ctx)
 
 	queryGet := `
 		select
